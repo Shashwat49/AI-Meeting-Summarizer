@@ -13,3 +13,4 @@ pydantic[email]
 langchain-google-genai
 langchain-core
 email-validator
+supabase
