@@ -1,0 +1,109 @@
+import os
+from supabase import create_client
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, GoogleGenerativeAI
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from dotenv import load_dotenv
+
+load_dotenv()
+
+supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
+embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+llm = GoogleGenerativeAI(model="gemini-2.5-flash-lite")
+
+parser = StrOutputParser()
+
+def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None, k: int = 4) -> list:
+    """
+    Embeds the query and retrieves top-k relevant meeting chunks
+    scoped to the current user (and optionally a specific project).
+    """
+    query_vector = embeddings_model.embed_query(query)
+
+    # Call the match function we created in Supabase
+    response = supabase.rpc("match_meeting_embeddings", {
+        "query_embedding": query_vector,
+        "match_count": k
+    }).execute()
+
+    results = response.data or []
+
+    # Filter by user_id (and project_id if provided) since our match function
+    # doesn't filter by user yet — we do it here
+    filtered = []
+    for r in results:
+        meta = r.get("metadata", {})
+        if meta.get("user_id") != user_id:
+            continue
+        if project_id and meta.get("project_id") != project_id:
+            continue
+        filtered.append(r)
+
+    return filtered
+
+
+def build_context(chunks: list) -> str:
+    """Formats retrieved chunks into a context string for the prompt."""
+    if not chunks:
+        return "No relevant meetings found."
+
+    context_parts = []
+    for i, chunk in enumerate(chunks, 1):
+        meta = chunk.get("metadata", {})
+        title = meta.get("title", "Untitled Meeting")
+        content = chunk.get("content", "")
+        context_parts.append(f"[Meeting {i}: {title}]\n{content}")
+
+    return "\n\n---\n\n".join(context_parts)
+
+
+prompt = PromptTemplate(
+    template="""
+You are an intelligent assistant that helps users query their meeting notes.
+
+Answer the user's question based ONLY on the meeting context provided below.
+If the answer is not found in the context, say "I couldn't find relevant information in your meetings."
+Do not make up any information.
+Be concise and precise.
+
+meeting context:
+{context}
+
+user question:
+{question}
+
+answer:
+""",
+    input_variables=["context", "question"]
+)
+
+chain = (
+    {
+        "context": RunnablePassthrough(),
+        "question": RunnablePassthrough()
+    } | prompt | llm | parser
+)
+
+
+def query_meetings(question: str, user_id: int, project_id: int = None) -> dict:
+    """
+    Main RAG function. Retrieves relevant meeting chunks and generates an answer.
+    Returns the answer and source meeting titles for transparency.
+    """
+    chunks = retrieve_relevant_meetings(question, user_id, project_id)
+    context = build_context(chunks)
+
+    # Extract source titles for reference
+    sources = []
+    for chunk in chunks:
+        title = chunk.get("metadata", {}).get("title")
+        if title and title not in sources:
+            sources.append(title)
+
+    answer = chain.invoke({"context": context, "question": question})
+
+    return {
+        "answer": answer,
+        "sources": sources
+    }
