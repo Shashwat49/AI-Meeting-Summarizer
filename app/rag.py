@@ -24,6 +24,7 @@ def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None,
     scoped to the current user (and optionally a specific project).
     """
     query_vector = embeddings_model.embed_query(query)
+    query_vector = query_vector[:768]
 
     # Call the match function we created in Supabase
     response = supabase.rpc("match_meeting_embeddings", {
