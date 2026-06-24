@@ -12,7 +12,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://ai-meeting-summarizer-1-dvsg.onrender.com",
-        "https://id-preview--1dfa762d-637e-443e-a5bd-577bb076af5c.lovable.app",
+        "https://aimeeting-summary.lovable.app",
         "http://localhost:8080"
     ],
     allow_credentials=True,
