@@ -11,6 +11,7 @@ from app.database import get_db
 from app import models, schemas
 from app.core.deps import get_current_user
 from app.summarizer import summarize_transcript
+from app.embeddings import store_meeting_embedding
 
 router = APIRouter(prefix="/meetings", tags=["Meetings"])
 
@@ -65,6 +66,17 @@ def create_summary(
     db.add(new_meeting)
     db.commit()
     db.refresh(new_meeting)
+
+    try:
+        store_meeting_embedding(
+            meeting_id=new_meeting.id,
+            project_id=payload.project_id,
+            user_id=current_user.id,
+            summary=ai_result.summary,
+            title=ai_result.title,
+        )
+    except Exception as e:
+        print(f"[WARNING] Embedding storage failed: {str(e)}")
 
     return new_meeting
 
