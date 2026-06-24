@@ -11,7 +11,11 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
-embeddings = GoogleGenerativeAIEmbeddings(model='models/gemini-embedding-001')
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/gemini-embedding-001",
+    task_type="retrieval_document",
+    dimensions=768
+)
 
 # ----- Function to store meeting embedding -----
 def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, summary: str, title: str):
