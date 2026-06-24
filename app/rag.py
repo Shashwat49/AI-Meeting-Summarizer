@@ -9,7 +9,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
-embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+embeddings_model = GoogleGenerativeAIEmbeddings(
+    model="models/gemini-embedding-001",
+    task_type="retrieval_query",
+    dimensions=768
+)
 llm = GoogleGenerativeAI(model="gemini-2.5-flash-lite")
 
 parser = StrOutputParser()
