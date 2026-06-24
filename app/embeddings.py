@@ -19,13 +19,14 @@ embeddings = GoogleGenerativeAIEmbeddings(
 
 # ----- Function to store meeting embedding -----
 def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, summary: str, title: str):
+    print(f"[EMBEDDING] Starting for meeting_id={meeting_id}")
+    
     text_to_embed = f"Meeting: {title} \nSummary: {summary}"
-
-    # embedding vector
+    
     vector = embeddings.embed_query(text_to_embed)
-
-    # Store in Supabase
-    supabase_client.table("meeting_embeddings").insert({
+    print(f"[EMBEDDING] Vector generated, dimensions={len(vector)}")
+    
+    result = supabase_client.table("meeting_embeddings").insert({
         "meeting_id": meeting_id,
         "project_id": project_id,
         "user_id": user_id,
@@ -38,6 +39,7 @@ def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, summ
             "title": title,
         }
     }).execute()
+    print(f"[EMBEDDING] Insert result: {result}")
 
 
 
