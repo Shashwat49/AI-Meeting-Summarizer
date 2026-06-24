@@ -24,6 +24,7 @@ def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, summ
     text_to_embed = f"Meeting: {title} \nSummary: {summary}"
     
     vector = embeddings.embed_query(text_to_embed)
+    vector = vector[:768]
     print(f"[EMBEDDING] Vector generated, dimensions={len(vector)}")
     
     result = supabase_client.table("meeting_embeddings").insert({
