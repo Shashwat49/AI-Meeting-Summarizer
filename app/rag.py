@@ -87,23 +87,24 @@ chain = (
 
 
 def query_meetings(question: str, user_id: int, project_id: int = None) -> dict:
-    """
-    Main RAG function. Retrieves relevant meeting chunks and generates an answer.
-    Returns the answer and source meeting titles for transparency.
-    """
-    chunks = retrieve_relevant_meetings(question, user_id, project_id)
-    context = build_context(chunks)
+    try:
+        chunks = retrieve_relevant_meetings(question, user_id, project_id)
+        context = build_context(chunks)
 
-    # Extract source titles for reference
-    sources = []
-    for chunk in chunks:
-        title = chunk.get("metadata", {}).get("title")
-        if title and title not in sources:
-            sources.append(title)
+        sources = []
+        for chunk in chunks:
+            title = chunk.get("metadata", {}).get("title")
+            if title and title not in sources:
+                sources.append(title)
 
-    answer = chain.invoke({"context": context, "question": question})
+        answer = chain.invoke({"context": context, "question": question})
 
-    return {
-        "answer": answer,
-        "sources": sources
-    }
+        return {
+            "answer": answer,
+            "sources": sources
+        }
+    except Exception as e:
+        import traceback
+        print(f"[RAG ERROR] {str(e)}")
+        print(traceback.format_exc())
+        raise
