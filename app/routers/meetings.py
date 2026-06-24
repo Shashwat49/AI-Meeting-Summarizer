@@ -76,7 +76,12 @@ def create_summary(
             title=ai_result.title,
         )
     except Exception as e:
-        print(f"[WARNING] Embedding storage failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Embedding failed: {str(e)}"
+        )
 
     return new_meeting
 
