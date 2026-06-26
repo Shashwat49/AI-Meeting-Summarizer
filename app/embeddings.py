@@ -25,6 +25,7 @@ def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, summ
     
     vector = embeddings.embed_query(text_to_embed)
     vector = vector[:768]
+    vector_str = "[" + ",".join(str(x) for x in vector) + "]"
     print(f"[EMBEDDING] Vector generated, dimensions={len(vector)}")
     
     result = supabase_client.table("meeting_embeddings").insert({
@@ -32,7 +33,7 @@ def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, summ
         "project_id": project_id,
         "user_id": user_id,
         "content": text_to_embed,
-        "embedding": vector,
+        "embedding": vector_str,
         "metadata": {
             "meeting_id": meeting_id,
             "project_id": project_id,
