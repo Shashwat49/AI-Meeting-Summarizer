@@ -19,16 +19,13 @@ llm = GoogleGenerativeAI(model="gemini-2.5-flash-lite")
 parser = StrOutputParser()
 
 def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None, k: int = 4) -> list:
-    """
-    Embeds the query and retrieves top-k relevant meeting chunks
-    scoped to the current user (and optionally a specific project).
-    """
     query_vector = embeddings_model.embed_query(query)
     query_vector = query_vector[:768]
 
-    # Call the match function we created in Supabase
+    query_vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
+
     response = supabase.rpc("match_meeting_embeddings", {
-        "query_embedding": query_vector,
+        "query_embedding": query_vector_str,
         "match_count": k
     }).execute()
 
@@ -38,10 +35,6 @@ def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None,
         meta = r.get("metadata", {})
         print(f"[RAG DEBUG] meta user_id={meta.get('user_id')} (type={type(meta.get('user_id'))}), current user_id={user_id} (type={type(user_id)})")
 
-    results = response.data or []
-
-    # Filter by user_id (and project_id if provided) since our match function
-    # doesn't filter by user yet — we do it here
     filtered = []
     for r in results:
         meta = r.get("metadata", {})
@@ -55,7 +48,6 @@ def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None,
 
 
 def build_context(chunks: list) -> str:
-    """Formats retrieved chunks into a context string for the prompt."""
     if not chunks:
         return "No relevant meetings found."
 
