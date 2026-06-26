@@ -19,6 +19,9 @@ llm = GoogleGenerativeAI(model="gemini-2.5-flash-lite")
 parser = StrOutputParser()
 
 def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None, k: int = 4) -> list:
+    test = supabase.table("meeting_embeddings").select("id, meeting_id, user_id").execute()
+    print(f"[RAG DEBUG] Direct table query: {test.data}")
+    
     query_vector = embeddings_model.embed_query(query)
     query_vector = query_vector[:768]
 
