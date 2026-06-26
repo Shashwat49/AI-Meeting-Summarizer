@@ -33,6 +33,12 @@ def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None,
     }).execute()
 
     results = response.data or []
+    print(f"[RAG DEBUG] Total results from DB: {len(results)}")
+    for r in results:
+        meta = r.get("metadata", {})
+        print(f"[RAG DEBUG] meta user_id={meta.get('user_id')} (type={type(meta.get('user_id'))}), current user_id={user_id} (type={type(user_id)})")
+
+    results = response.data or []
 
     # Filter by user_id (and project_id if provided) since our match function
     # doesn't filter by user yet — we do it here
