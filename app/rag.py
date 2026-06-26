@@ -26,11 +26,15 @@ def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None,
     query_vector = query_vector[:768]
 
     query_vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
+    print(f"[RAG DEBUG] Vector string preview: {query_vector_str[:50]}")
+    print(f"[RAG DEBUG] Vector string type: {type(query_vector_str)}")
 
     response = supabase.rpc("match_meeting_embeddings", {
         "query_embedding": query_vector_str,
         "match_count": k
     }).execute()
+
+    print(f"[RAG DEBUG] Full RPC response: {response}")
 
     results = response.data or []
     print(f"[RAG DEBUG] Total results from DB: {len(results)}")
