@@ -21,30 +21,23 @@ parser = StrOutputParser()
 def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None, k: int = 4) -> list:
     query_vector = embeddings_model.embed_query(query)
     query_vector = query_vector[:768]
+    query_vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
 
     response = supabase.rpc("match_meeting_embeddings", {
-        "query_embedding": query_vector,
+        "query_embedding": query_vector_str,
         "match_count": k
     }).execute()
 
-    print(f"[RAG DEBUG] RPC with list: {len(response.data) if response.data else 0} results")
+    print(f"[RAG DEBUG] RPC results: {len(response.data) if response.data else 0}")
 
     if not response.data:
-        query_vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
-        response = supabase.rpc("match_meeting_embeddings", {
-            "query_embedding": query_vector_str,
-            "match_count": k
-        }).execute()
-        print(f"[RAG DEBUG] RPC with string: {len(response.data) if response.data else 0} results")
-
-    if not response.data:
-        print("[RAG DEBUG] Both RPC formats failed, falling back to direct fetch")
         fallback = supabase.table("meeting_embeddings").select("id, content, metadata").execute()
-        return fallback.data or []
+        results = fallback.data or []
+        print(f"[RAG DEBUG] Fallback results: {len(results)}")
+        return results
 
-    results = response.data or []
     filtered = []
-    for r in results:
+    for r in response.data:
         meta = r.get("metadata", {})
         if meta.get("user_id") != user_id:
             continue
