@@ -17,23 +17,35 @@ embeddings = GoogleGenerativeAIEmbeddings(
     dimensions=768
 )
 
-# ----- Function to store meeting embedding -----
-def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, summary: str, title: str):
+def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, title: str, summary: str, action_items: list = [], decisions: list = [], deadlines: list = [], participants: list = [], sentiment: str = ""):
+    action_items_text = "\n".join(f"- {item}" for item in action_items) if action_items else "None"
+    decisions_text = "\n".join(f"- {d}" for d in decisions) if decisions else "None"
+    deadlines_text = "\n".join(f"- {d}" for d in deadlines) if deadlines else "None"
+    participants_text = ", ".join(participants) if participants else "None"
+
+    text_to_embed = f"""Meeting: {title}
+Participants: {participants_text}
+Sentiment: {sentiment}
+Summary: {summary}
+Action Items:
+{action_items_text}
+Key Decisions:
+{decisions_text}
+Deadlines:
+{deadlines_text}"""
+
     print(f"[EMBEDDING] Starting for meeting_id={meeting_id}")
-    
-    text_to_embed = f"Meeting: {title} \nSummary: {summary}"
-    
-    vector = embeddings.embed_query(text_to_embed)
+    print(f"[EMBEDDING] Text to embed:\n{text_to_embed}")
+
+    vector = embeddings_model.embed_query(text_to_embed)
     vector = vector[:768]
-    vector_str = "[" + ",".join(str(x) for x in vector) + "]"
-    print(f"[EMBEDDING] Vector generated, dimensions={len(vector)}")
-    
+
     result = supabase_client.table("meeting_embeddings").insert({
         "meeting_id": meeting_id,
         "project_id": project_id,
         "user_id": user_id,
         "content": text_to_embed,
-        "embedding": vector_str,
+        "embedding": vector,
         "metadata": {
             "meeting_id": meeting_id,
             "project_id": project_id,
@@ -41,7 +53,7 @@ def store_meeting_embedding(meeting_id: int, project_id: int, user_id: int, summ
             "title": title,
         }
     }).execute()
-    print(f"[EMBEDDING] Insert result: {result}")
+    print(f"[EMBEDDING] Successfully stored for meeting_id={meeting_id}")
 
 
 
