@@ -25,7 +25,7 @@ def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None,
     
     # Bypass RPC, use raw SQL via supabase
     response = supabase.rpc("match_meeting_embeddings", {
-        "query_embedding": query_vector_str,
+        "query_embedding": query_vector,
         "match_count": k
     }).execute()
     
