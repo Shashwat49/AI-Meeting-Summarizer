@@ -72,8 +72,13 @@ def create_summary(
             meeting_id=new_meeting.id,
             project_id=payload.project_id,
             user_id=current_user.id,
-            summary=ai_result.summary,
             title=ai_result.title,
+            summary=ai_result.summary,
+            action_items=ai_result.action_items,
+            decisions=ai_result.decisions,
+            deadlines=ai_result.deadlines,
+            participants=ai_result.participants,
+            sentiment=ai_result.sentiment,
         )
     except Exception as e:
         import traceback
