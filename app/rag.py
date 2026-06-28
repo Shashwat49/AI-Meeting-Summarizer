@@ -19,29 +19,24 @@ llm = GoogleGenerativeAI(model="gemini-2.5-flash-lite")
 parser = StrOutputParser()
 
 def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None, k: int = 4) -> list:
-    test = supabase.table("meeting_embeddings").select("id, meeting_id, user_id").execute()
-    print(f"[RAG DEBUG] Direct table query: {test.data}")
-    
     query_vector = embeddings_model.embed_query(query)
     query_vector = query_vector[:768]
-
     query_vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
-    print(f"[RAG DEBUG] Vector string preview: {query_vector_str[:50]}")
-    print(f"[RAG DEBUG] Vector string type: {type(query_vector_str)}")
-
+    
+    # Bypass RPC, use raw SQL via supabase
     response = supabase.rpc("match_meeting_embeddings", {
         "query_embedding": query_vector_str,
         "match_count": k
     }).execute()
-
-    print(f"[RAG DEBUG] Full RPC response: {response}")
-
+    
+    print(f"[RAG DEBUG] RPC data: {response.data}")
+    
+    if not response.data:
+        print("[RAG DEBUG] RPC returned empty, falling back to direct fetch")
+        response = supabase.table("meeting_embeddings").select("id, content, metadata").execute()
+        return response.data or []
+    
     results = response.data or []
-    print(f"[RAG DEBUG] Total results from DB: {len(results)}")
-    for r in results:
-        meta = r.get("metadata", {})
-        print(f"[RAG DEBUG] meta user_id={meta.get('user_id')} (type={type(meta.get('user_id'))}), current user_id={user_id} (type={type(user_id)})")
-
     filtered = []
     for r in results:
         meta = r.get("metadata", {})
@@ -50,7 +45,6 @@ def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None,
         if project_id and meta.get("project_id") != project_id:
             continue
         filtered.append(r)
-
     return filtered
 
 
