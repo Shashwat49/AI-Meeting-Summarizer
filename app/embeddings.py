@@ -37,7 +37,7 @@ Deadlines:
     print(f"[EMBEDDING] Starting for meeting_id={meeting_id}")
     print(f"[EMBEDDING] Text to embed:\n{text_to_embed}")
 
-    vector = embeddings_model.embed_query(text_to_embed)
+    vector = embeddings.embed_query(text_to_embed)
     vector = vector[:768]
 
     result = supabase_client.table("meeting_embeddings").insert({
