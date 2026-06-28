@@ -19,32 +19,20 @@ llm = GoogleGenerativeAI(model="gemini-2.5-flash-lite")
 parser = StrOutputParser()
 
 def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None, k: int = 4) -> list:
-    query_vector = embeddings_model.embed_query(query)
-    query_vector = query_vector[:768]
-    query_vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
-
-    response = supabase.rpc("match_meeting_embeddings", {
-        "query_embedding": query_vector_str,
-        "match_count": k
-    }).execute()
-
-    print(f"[RAG DEBUG] RPC results: {len(response.data) if response.data else 0}")
-
-    if not response.data:
-        fallback = supabase.table("meeting_embeddings").select("id, content, metadata").execute()
-        results = fallback.data or []
-        print(f"[RAG DEBUG] Fallback results: {len(results)}")
-        return results
+    query_builder = supabase.table("meeting_embeddings").select("id, content, metadata")
+    
+    response = query_builder.execute()
+    results = response.data or []
 
     filtered = []
-    for r in response.data:
+    for r in results:
         meta = r.get("metadata", {})
         if meta.get("user_id") != user_id:
             continue
         if project_id and meta.get("project_id") != project_id:
             continue
         filtered.append(r)
-    return filtered
+    return filtered[:k]
 
 
 def build_context(chunks: list) -> str:
