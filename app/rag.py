@@ -21,21 +21,27 @@ parser = StrOutputParser()
 def retrieve_relevant_meetings(query: str, user_id: int, project_id: int = None, k: int = 4) -> list:
     query_vector = embeddings_model.embed_query(query)
     query_vector = query_vector[:768]
-    query_vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
-    
-    # Bypass RPC, use raw SQL via supabase
+
     response = supabase.rpc("match_meeting_embeddings", {
         "query_embedding": query_vector,
         "match_count": k
     }).execute()
-    
-    print(f"[RAG DEBUG] RPC data: {response.data}")
-    
+
+    print(f"[RAG DEBUG] RPC with list: {len(response.data) if response.data else 0} results")
+
     if not response.data:
-        print("[RAG DEBUG] RPC returned empty, falling back to direct fetch")
-        response = supabase.table("meeting_embeddings").select("id, content, metadata").execute()
-        return response.data or []
-    
+        query_vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
+        response = supabase.rpc("match_meeting_embeddings", {
+            "query_embedding": query_vector_str,
+            "match_count": k
+        }).execute()
+        print(f"[RAG DEBUG] RPC with string: {len(response.data) if response.data else 0} results")
+
+    if not response.data:
+        print("[RAG DEBUG] Both RPC formats failed, falling back to direct fetch")
+        fallback = supabase.table("meeting_embeddings").select("id, content, metadata").execute()
+        return fallback.data or []
+
     results = response.data or []
     filtered = []
     for r in results:
