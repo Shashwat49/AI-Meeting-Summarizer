@@ -11,7 +11,7 @@ app = FastAPI(title="AI Meeting Notes Summarizer API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://ai-meeting-summarizer-1-dvsg.onrender.com",
+        "https://ai-meeting-summarizer-rjzh.onrender.com",
         "https://aimeeting-summary.lovable.app",
         "http://localhost:8080"
     ],
