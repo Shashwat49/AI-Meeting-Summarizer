@@ -1,7 +1,3 @@
-"""
-Auth utilities: password hashing and JWT token creation/verification.
-"""
-
 import os
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
@@ -12,7 +8,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY not found in .env file")
