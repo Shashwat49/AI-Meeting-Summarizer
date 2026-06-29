@@ -1,8 +1,3 @@
-"""
-Dependency used in protected routes to identify the currently logged-in user
-based on the JWT token sent in the Authorization header.
-"""
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -11,7 +6,6 @@ from app.database import get_db
 from app.core.security import decode_access_token
 from app import models
 
-# This tells FastAPI/Swagger where the login endpoint is, for the "Authorize" button
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
