@@ -1,10 +1,3 @@
-"""
-SQLAlchemy models — matches your EXISTING database schema
-(users -> projects -> meetings), with 4 extra columns added to
-meetings (participants, date_time, duration, sentiment) to hold
-fields produced by the AI summarizer.
-"""
-
 from sqlalchemy import (
     Column, BigInteger, Integer, String, Text, DateTime, ForeignKey, JSON
 )
