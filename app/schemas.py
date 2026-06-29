@@ -1,7 +1,3 @@
-"""
-Pydantic schemas used for API request/response validation.
-"""
-
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Literal, Optional
 from datetime import datetime
