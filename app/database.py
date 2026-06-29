@@ -1,8 +1,3 @@
-"""
-Database connection setup using SQLAlchemy + PostgreSQL.
-All DB credentials come from the .env file.
-"""
-
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
