@@ -13,12 +13,12 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 
 class ChatRequest(BaseModel):
     question: str
-    project_id: Optional[int] = None  # None means search across all meetings
+    project_id: Optional[int] = None 
 
 
 class ChatResponse(BaseModel):
     answer: str
-    sources: List[str]  # meeting titles the answer was pulled from
+    sources: List[str]
 
 
 @router.post("/", response_model=ChatResponse)
@@ -27,11 +27,6 @@ def chat(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    """
-    Takes a natural language question and returns an answer
-    grounded in the user's meeting summaries.
-    Optionally scoped to a specific project.
-    """
     if not payload.question.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
