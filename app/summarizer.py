@@ -1,9 +1,3 @@
-"""
-This file contains your EXACT summarizer logic from the Streamlit app,
-just wrapped inside a function (summarize_transcript) instead of being
-tied to Streamlit UI calls. The prompt, schema, and chain are untouched.
-"""
-
 from langchain_google_genai import GoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
